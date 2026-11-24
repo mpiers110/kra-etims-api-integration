@@ -4,15 +4,17 @@
   "description": "Kenya Revenue Authority (KRA) Electronic Tax Invoice Management System (eTims) API Integration SDK",
   "main": "src/index.js",
   "files": [
+    "dist/**/*",
     "src/**/*",
     "examples/**/*",
     "README.md",
     ".env.example"
   ],
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "test": "jest",
+    "build": "tsc",
+    "start": "node dist/src/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "tsc && jest",
     "prepublishOnly": "npm test",
     "postversion": "git push && git push --tags"
   },
@@ -54,7 +56,12 @@
     "winston": "^3.11.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
     "jest": "^29.7.0",
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2"
   }
 }

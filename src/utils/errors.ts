@@ -2,14 +2,24 @@
  * Error handling utilities for KRA eTims SDK
  * Provides custom error classes and error handling functions
  */
-const logger = require('./logger');
+import logger from './logger';
 
 /**
  * Custom API Error class
  */
-class ApiError extends Error {
-  constructor(message, statusCode, errorCode = null, details = null) {
+export class ApiError extends Error {
+  public statusCode: number;
+  public errorCode: string | null;
+  public details: unknown;
+
+  constructor(
+    message: string,
+    statusCode: number,
+    errorCode: string | null = null,
+    details: unknown = null
+  ) {
     super(message);
+    Object.setPrototypeOf(this, new.target.prototype);
     this.statusCode = statusCode;
     this.errorCode = errorCode;
     this.details = details;
@@ -21,9 +31,12 @@ class ApiError extends Error {
 /**
  * Custom Validation Error class
  */
-class ValidationError extends Error {
-  constructor(message, errors = []) {
+export class ValidationError extends Error {
+  public errors: unknown[];
+
+  constructor(message: string, errors: unknown[] = []) {
     super(message);
+    Object.setPrototypeOf(this, new.target.prototype);
     this.errors = errors;
     this.name = this.constructor.name;
     Error.captureStackTrace(this, this.constructor);
@@ -33,27 +46,58 @@ class ValidationError extends Error {
 /**
  * Custom Authentication Error class
  */
-class AuthenticationError extends Error {
-  constructor(message) {
+export class AuthenticationError extends Error {
+  constructor(message: string) {
     super(message);
+    Object.setPrototypeOf(this, new.target.prototype);
     this.name = this.constructor.name;
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
 /**
- * Error handler for API responses
- * @param {Object} response - API response object
- * @param {string} operation - Operation name for logging
+ * Shape of the KRA API response envelope
  */
-const handleApiResponse = (response) => {
+export interface KraResponseData {
+  resultCd?: string;
+  resultMsg?: string;
+  [key: string]: unknown;
+}
+
+export interface KraApiResponse<T extends KraResponseData = KraResponseData> {
+  data?: T;
+  status?: number;
+}
+
+/**
+ * Consistent error response shape
+ */
+export interface FormattedError {
+  success: false;
+  error: {
+    message: string;
+    code?: string | null;
+    details?: unknown;
+    validationErrors?: unknown[];
+  };
+  statusCode: number;
+}
+
+/**
+ * Error handler for API responses
+ */
+export const handleApiResponse = <T extends KraResponseData = KraResponseData>(
+  response: KraApiResponse<T> | null | undefined
+): T => {
   if (!response || !response.data) {
     throw new ApiError('Invalid API response', 500);
   }
 
   // Check for KRA API specific error codes
   if (response.data.resultCd && response.data.resultCd !== '0000') {
-    logger.error(`API Error: ${response.data.resultMsg || 'Unknown error'}`);
+    logger.error(
+      `[handleApiResponse] API Error: ${response.data.resultMsg || 'Unknown error'}`
+    );
     throw new ApiError(
       response.data.resultMsg || 'API Error',
       response.status || 400,
@@ -66,9 +110,8 @@ const handleApiResponse = (response) => {
 
 /**
  * Format error for consistent response
- * @param {Error} err - Error object
  */
-const formatError = (err) => {
+export const formatError = (err: unknown): FormattedError => {
   if (err instanceof ApiError) {
     return {
       success: false,
@@ -95,9 +138,7 @@ const formatError = (err) => {
   if (err instanceof AuthenticationError) {
     return {
       success: false,
-      error: {
-        message: err.message
-      },
+      error: { message: err.message },
       statusCode: 401
     };
   }
@@ -106,16 +147,8 @@ const formatError = (err) => {
   return {
     success: false,
     error: {
-      message: err.message || 'Internal Server Error'
+      message: err instanceof Error && err.message ? err.message : 'Internal Server Error'
     },
     statusCode: 500
   };
-};
-
-module.exports = {
-  ApiError,
-  ValidationError,
-  AuthenticationError,
-  handleApiResponse,
-  formatError
 };

@@ -1,8 +1,8 @@
 /**
  * Tests for KRA eTims SDK API Service
  */
-const apiService = require('../src/services/api.service');
-const { AuthenticationError } = require('../src/utils/errors');
+const apiService = require('../dist/src/services/api.service');
+const { AuthenticationError } = require('../dist/src/utils/errors');
 
 // Mock axios
 jest.mock('axios', () => ({
@@ -21,6 +21,8 @@ jest.mock('axios', () => ({
 describe('API Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    apiService.username = 'test-user';
+    apiService.password = 'test-password';
   });
 
   test('isTokenValid should return false when token is not set', () => {

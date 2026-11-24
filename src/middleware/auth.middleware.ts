@@ -2,8 +2,10 @@
  * Authentication middleware for KRA eTims SDK
  * Validates authentication for API requests
  */
-const { AuthenticationError } = require('../utils/errors');
-const logger = require('../utils/logger');
+import { AuthenticationError } from '../utils/errors';
+import { Response, NextFunction } from 'express';
+import logger from '../utils/logger';
+import {TokenRequest} from '../utils/types';
 
 /**
  * Middleware to check if request is authenticated
@@ -11,7 +13,7 @@ const logger = require('../utils/logger');
  * @param {Object} res - Express response object
  * @param {Function} next - Express next function
  */
-const requireAuth = (req, res, next) => {
+export const requireAuth = (req: TokenRequest, res: Response, next: NextFunction) => {
   try {
     // Check for authorization header
     const authHeader = req.headers.authorization;
@@ -33,11 +35,8 @@ const requireAuth = (req, res, next) => {
     // Continue to next middleware
     next();
   } catch (error) {
-    logger.error(`Authentication middleware error: ${error.message}`);
+    logger.error('Authentication middleware error:', error);
     next(error);
   }
 };
 
-module.exports = {
-  requireAuth
-};
