@@ -2,7 +2,8 @@
  * Configuration module for KRA eTims SDK
  * Loads and validates environment variables
  */
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Determine which API base URL to use based on environment
 const getApiBaseUrl = () => {
@@ -13,7 +14,7 @@ const getApiBaseUrl = () => {
   return process.env.DEV_API_BASE_URL || 'https://etims-api-sbx.kra.go.ke';
 };
 
-const config = {
+export const config = {
   apiBaseUrl: getApiBaseUrl(),
   apiUsername: process.env.API_USERNAME,
   apiPassword: process.env.API_PASSWORD,
@@ -90,5 +91,3 @@ const config = {
     }
   }
 };
-
-module.exports = config;

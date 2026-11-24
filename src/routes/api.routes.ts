@@ -2,21 +2,14 @@
  * API Routes for KRA eTims SDK
  * Defines routes for the Express server
  */
-const express = require('express');
-const { 
-  authController,
-  initializationController,
-  basicDataController,
-  salesController,
-  stockController,
-  purchaseController
-} = require('../controllers/api.controller');
-const { requireAuth } = require('../middleware/auth.middleware');
+import {Router, Request, Response} from 'express';
+import { authController, basicDataController, initializationController, purchaseController, salesController, stockController } from '../controllers/api.controller';
+import { requireAuth } from '../middleware/auth.middleware';
 
-const router = express.Router();
+const router = Router();
 
 // Health check route
-router.get('/health', (req, res) => {
+router.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString()
@@ -49,4 +42,4 @@ router.post('/stock/save-master', requireAuth, stockController.saveStockMaster);
 // Purchase routes
 router.post('/purchase/select', requireAuth, purchaseController.selectPurchaseTrns);
 
-module.exports = router;
+export default router;
