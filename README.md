@@ -48,6 +48,7 @@ Each receipt issued by Trader Invoicing System is formed from a combination of r
 ## Features
 
 - Complete implementation of KRA eTims API endpoints
+- Written in TypeScript with full type definitions
 - Express.js server for easy integration
 - Comprehensive validation of requests
 - Error handling and logging
@@ -64,49 +65,69 @@ git clone https://github.com/matatashadrack/kra-etims-api-integration.git
 cd kra-etims-api-integration
 
 # Install dependencies
+```bash
 npm install
+
+# or
+yarn install
+
+# or
+pnpm install
+```
 
 # Copy the example environment file
 cp .env.example .env
 
 # Edit the .env file with your credentials
+
+# Compile TypeScript to JavaScript (output goes to dist/)
+npm run build
 ```
 
 ## Project Structure
 
 ```
 kra-etims/
-├── examples/                  # Example usage scripts
-│   ├── basic-usage.js         # SDK usage as a library
-│   └── server-usage.js        # SDK usage as a server
-├── src/                       # Source code
-│   ├── config/                # Configuration files
-│   │   └── index.js           # Main configuration
-│   ├── controllers/           # API controllers
-│   │   └── api.controller.js  # Controller implementation
-│   ├── middleware/            # Express middleware
-│   │   └── auth.middleware.js # Authentication middleware
-│   ├── routes/                # API routes
-│   │   └── api.routes.js      # Route definitions
-│   ├── services/              # Business logic services
-│   │   ├── api.service.js     # Core API service
-│   │   ├── auth.service.js    # Authentication service
-│   │   ├── basic-data.service.js    # Basic data service
-│   │   ├── initialization.service.js # Initialization service
-│   │   ├── purchase.service.js      # Purchase service
-│   │   ├── sales.service.js         # Sales service
-│   │   └── stock.service.js         # Stock service
-│   ├── utils/                 # Utility functions
-│   │   ├── errors.js          # Error handling
-│   │   ├── logger.js          # Logging utility
-│   │   └── validation.js      # Request validation
-│   └── index.js               # Main entry point
-├── tests/                     # Test files
-│   └── api.test.js            # API service tests
-├── .env.example              # Environment variables example
-├── package.json              # Project metadata and dependencies
-└── README.md                 # SDK docs
+├── examples/                       # Example usage scripts
+│   ├── basic-usage.ts              # SDK usage as a library
+│   └── server-usage.ts             # SDK usage as a server
+├── src/                            # Source code
+│   ├── config/                     # Configuration files
+│   │   └── index.ts                # Main configuration
+│   ├── controllers/                # API controllers
+│   │   └── api.controller.ts       # Controller implementation
+│   ├── middleware/                 # Express middleware
+│   │   ├── auth.middleware.ts      # Authentication middleware
+│   │   └── cors.middleware.ts      # CORS whitelist middleware
+│   ├── routes/                     # API routes
+│   │   └── api.routes.ts           # Route definitions
+│   ├── services/                   # Business logic services
+│   │   ├── api.service.ts          # Core API service
+│   │   ├── auth.service.ts         # Authentication service
+│   │   ├── basic-data.service.ts   # Basic data service
+│   │   ├── initialization.service.ts # Initialization service
+│   │   ├── purchase.service.ts     # Purchase service
+│   │   ├── sales.service.ts        # Sales service
+│   │   └── stock.service.ts        # Stock service
+│   ├── utils/                      # Utility functions
+│   │   ├── errors.ts               # Error classes and formatting
+│   │   ├── logger.ts               # Logging utility
+│   │   ├── types.ts                # Shared type definitions
+│   │   └── validation.ts           # Request schemas and types
+│   └── index.ts                    # Main entry point
+├── tests/                          # Test files
+│   ├── api-service-extra.test.ts   # API service edge case tests
+│   ├── api.test.ts                 # API service tests
+│   ├── errors.ts                   # Error classes and formatting
+│   ├── services.test.ts            # Error classes and formatting
+│   └── validation.test.ts          # Validation tests
+├── dist/                           # Compiled output (auto-generated)
+├── .env.example                    # Environment variables example
+├── package.json                    # Project metadata and dependencies
+├── tsconfig.json                   # TypeScript config
+└── README.md                       # SDK docs
 ```
+
 
 ## Configuration
 
@@ -137,57 +158,70 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5000
 
 ### As a Node.js SDK
 
-```javascript
-const KRAeTimsSDK = require('./src');
+```typescript
+import 'dotenv/config';
+import KRAeTimsSDK from './src';
+import type {
+  AuthRequest,
+  InitializationRequest,
+  ListRequest,
+  SalesTrnsRequest
+} from './src/utils/validation';
 
 // Initialize the SDK
 const sdk = new KRAeTimsSDK();
 
+const getErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
 // Example: Authentication
-async function authenticate() {
+async function authenticate(): Promise<void> {
   try {
-    const result = await sdk.auth.getToken({
+    const credentials: AuthRequest = {
       username: 'your_username',
       password: 'your_password'
-    });
+    };
+    const result = await sdk.auth.getToken(credentials);
     console.log('Authentication successful:', result);
   } catch (error) {
-    console.error('Authentication failed:', error);
+    console.error('Authentication failed:', getErrorMessage(error));
   }
 }
 
 // Example: Initialize OSDC Info
-async function initializeOsdc() {
+async function initializeOsdc(): Promise<void> {
   try {
-    const result = await sdk.initialization.selectInitOsdcInfo({
+    const request: InitializationRequest = {
       tin: 'P000000045R',
       bhfId: '00',
       dvcSrlNo: 'MOVA22'
-    });
+    };
+    const result = await sdk.initialization.selectInitOsdcInfo(request);
     console.log('Initialization successful:', result);
   } catch (error) {
-    console.error('Initialization failed:', error);
+    console.error('Initialization failed:', getErrorMessage(error));
   }
 }
 
 // Example: Get Code List
-async function getCodeList() {
+async function getCodeList(): Promise<void> {
   try {
-    const result = await sdk.basicData.selectCodeList({
+    const request: ListRequest = {
       tin: 'P000000045R',
       bhfId: '00',
       lastReqDt: '20220101010101'
-    });
+    };
+    const result = await sdk.basicData.selectCodeList(request);
     console.log('Code list retrieved:', result);
   } catch (error) {
-    console.error('Failed to retrieve code list:', error);
+    console.error('Failed to retrieve code list:', getErrorMessage(error));
   }
 }
 
 // Example: Send Sales Transaction
-async function sendSalesTrns() {
+async function sendSalesTrns(): Promise<void> {
   try {
-    const result = await sdk.sales.sendSalesTrns({
+    const request: SalesTrnsRequest = {
       tin: 'P000000045R',
       bhfId: '00',
       invcNo: 'INV001',
@@ -202,18 +236,26 @@ async function sendSalesTrns() {
           taxAmt: 16
         }
       ]
-    });
+    };
+    const result = await sdk.sales.sendSalesTrns(request);
     console.log('Sales transaction sent:', result);
   } catch (error) {
-    console.error('Failed to send sales transaction:', error);
+    console.error('Failed to send sales transaction:', getErrorMessage(error));
   }
 }
 ```
 
+If you consume the compiled package from another project, import from the package name instead of `./src`, and the bundled type declarations are picked up automatically.
+
+```typescript
+import KRAeTimsSDK, { KRAeTimsSDKOptions } from 'kra-etims-api-integration';
+```
+
 ### As an Express Server
 
-```javascript
-const KRAeTimsSDK = require('./src');
+```typescript
+import 'dotenv/config';
+import KRAeTimsSDK from './src';
 
 // Initialize the SDK with server option
 const sdk = new KRAeTimsSDK({ server: true });
@@ -221,9 +263,17 @@ const sdk = new KRAeTimsSDK({ server: true });
 // Start the server
 sdk.start(5000).then(() => {
   console.log('Server started on port 5000');
-}).catch(err => {
-  console.error('Failed to start server:', err);
+}).catch((err: unknown) => {
+  console.error('Failed to start server:', err instanceof Error ? err.message : err);
+  process.exit(1);
 });
+```
+
+Run it during development with `npm run dev`, or build and run the compiled output:
+
+```bash
+npm run build
+npm start
 ```
 
 Then you can make HTTP requests to the API endpoints:
@@ -243,6 +293,72 @@ curl -X POST http://localhost:5000/api/initialization/osdc-info \
 curl -X POST http://localhost:5000/api/basic-data/code-list \
   -H "Content-Type: application/json" \
   -d '{"tin":"P000000045R","bhfId":"00","lastReqDt":"20220101010101"}'
+```
+
+## Types
+
+Request types are exported from `src/utils/validation.ts` and are tied to the Joi schemas, so a request validated with `validate()` comes back fully typed.
+
+| Type | Used by |
+|------|---------|
+| `AuthRequest` | `POST /api/auth/token` |
+| `InitializationRequest` | `POST /api/initialization/osdc-info` |
+| `ListRequest` | code list, item class list, notice list, taxpayer info, customer list, move list, purchase select |
+| `BhfListRequest` | `POST /api/basic-data/bhf-list` |
+| `SalesTrnsRequest` / `SalesTrnsItem` | `POST /api/sales/send` |
+| `SelectSalesTrnsRequest` | `POST /api/sales/select` |
+| `StockMasterRequest` | `POST /api/stock/save-master` |
+
+Validating input in your own code:
+
+```typescript
+import { schemas, validate, SalesTrnsRequest } from './src/utils/validation';
+
+// Throws ValidationError with per-field messages if the data is invalid
+const payload: SalesTrnsRequest = validate(req.body, schemas.salesTrns);
+```
+
+### Authenticated requests
+
+`requireAuth` stores the bearer token on the request. The `AuthenticatedRequest` type extends Express's `Request` with a required `token: string`, and `isAuthenticated` narrows a plain `Request` to it:
+
+```typescript
+import { Request, Response, NextFunction } from 'express';
+import { isAuthenticated } from './src/types/authenticated-request';
+import { AuthenticationError } from './src/utils/errors';
+
+export const handler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!isAuthenticated(req)) {
+      throw new AuthenticationError('Authentication required');
+    }
+    res.json({ token: req.token }); // token is typed as string here
+  } catch (error) {
+    next(error);
+  }
+};
+```
+
+### Errors
+
+`ApiError`, `ValidationError` and `AuthenticationError` are exported from `src/utils/errors.ts`. Use `instanceof` to branch on them:
+
+```typescript
+import { ApiError, ValidationError, AuthenticationError } from './src/utils/errors';
+
+try {
+  await sdk.sales.sendSalesTrns(request);
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error('Invalid request:', error.errors);
+  } else if (error instanceof AuthenticationError) {
+    console.error('Not authenticated');
+  } else if (error instanceof ApiError) {
+    console.error(`KRA error ${error.errorCode}: ${error.message}`);
+  } else {
+    throw error;
+  }
+}
 ```
 
 ## API Endpoints
@@ -484,7 +600,7 @@ The default CORS configuration includes:
 - **Credentials**: Enabled (supports cookies and authentication)
 - **Max Age**: 24 hours (caches preflight requests)
 
-You can modify these settings in `src/config/index.js` if needed.
+You can modify these settings in `src/config/index.ts` if needed.
 
 ## Development
 
@@ -492,8 +608,21 @@ You can modify these settings in `src/config/index.js` if needed.
 # Run in development mode with auto-reload
 npm run dev
 
+# Type check without emitting files
+npm run typecheck
+
+# Compile to dist/
+npm run build
+
+# Run the compiled server
+npm start
+
 # Run tests
 npm test
+
+# Run the examples
+npm run example:basic
+npm run example:server
 ```
 
 ## License
